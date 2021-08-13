@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.1/css/font-awesome.min.css" />
+</head>
+<body>
+    <h1 class="jumbotron text-center">
+        <img
+          src="https://images.theconversation.com/files/304957/original/file-20191203-66986-im7o5.jpg?ixlib=rb-1.1.0&q=45&auto=format&w=1200&h=1200.0&fit=crop"
+          alt="Doctor Chatbot"
+          style="width:8%;height:8%;margin-right: 1vw;"
+          />Welcome to COVID-19 Support</h1>
+
+
+
+
+
+
+
+
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-6 offset-sm-3">
+            <div id="chatbox" class="border border-success">
+                <p class="botText"><span id="chat0">Tip) Hi! I am your virtual health advisor. Start by asking health related questions first. You can use your microphone or text to ask queries. You can end the conversation by entering <b>"bye"</b>. If you would like to know quick World Stats about COVID, type stats:covid</span></p>
+
+            </div>
+            <button type = "button" onclick="speak();">Speak</button>
+
+<!--              <form action = "" method = "POST">-->
+            <div id="userInput">
+                <input type="text" id="result1" size="40" maxlength=100 name = "Name" />
+
+                <button type = "button" onclick="startConverting();"><i class="fa fa-microphone"></i></button>
+                <!-- click this button to stop converting-->
+                <button type = "button" onclick="stopConverting();"><i class="fa fa-remove"></i></button>
+
+                <input id="buttonInput" class="btn btn-success form-control" type="submit" value="Send">
+            <!--    </form>-->
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    var chat_num=0;
+    function getResponse() {
+        chat_num=chat_num+1;
+        let userText = $("#result1").val();
+        let userHtml = '<p class="userText"><span id="chat'+chat_num+'">' + userText + '</span></p>';
+        // console.log(userHtml);
+        $("#result1").val("");
+        $("#chatbox").append(userHtml);
+        document.getElementById('userInput').scrollIntoView({block: 'start', behavior: 'smooth'});
+        chat_num=chat_num+1;
+        $.get("/get", { msg: userText }).done(function(data) {
+        var botHtml = '<p class="botText"><span id="chat'+chat_num+'">' + data + '</span></p>';
+        $("#chatbox").append(botHtml);
+        document.getElementById('userInput').scrollIntoView({block: 'start', behavior: 'smooth'});
+
+});
+}
+    $("#result1").keypress(function(e) {
+    //if enter key is pressed
+        if(e.which == 13) {
+            getResponse();
+        }
+    });
+    $("#buttonInput").click(function() {
+        getResponse();
+    });
+    function speak(){
+      var chat_str='chat'+chat_num;
+      // console.log(chat_str);
+      var userText = document.getElementById(chat_str).innerText;
+      // console.log(userText);
+      var msg = new SpeechSynthesisUtterance();
+      msg.text = userText;
+      // msg.text = "Hello world";
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(msg);
+      console.log("what");
+    }
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+
+      var overlay = document.getElementById("overlay");
+      var r = document.getElementById('result1');
+      console.log(r);
+      var speechRecognizer = new webkitSpeechRecognition();// a new speech recognition object
+
+      //function to start listening to voice and then convert it to text
+      function startConverting () {
+        if('webkitSpeechRecognition' in window){
+
+          speechRecognizer.continuous = true;
+          speechRecognizer.interimResults = true;
+          speechRecognizer.lang = 'en-IN';
+          speechRecognizer.start();
+          var finalTranscripts = '';
+          speechRecognizer.onresult = function(event){
+            var interimTranscripts = '';
+            for(var i = event.resultIndex; i < event.results.length; i++){
+              var transcript = event.results[i][0].transcript;
+              transcript.replace("\n", "<br>");
+              if(event.results[i].isFinal){
+                finalTranscripts += transcript;
+              }else{
+                interimTranscripts += transcript;
+              }
+            }
+            r.value = finalTranscripts + interimTranscripts ;
+          };
+          speechRecognizer.onerror = function (event) {
+          };
+        }else{
+          r.innerHTML = 'No browser support. Please upgrade your browser';
+        }
+      }
+      //function to stop listening
+      function stopConverting()
+      {
+        speechRecognizer.stop();
+      }
+
+    </script>
+</div>
+</body>
+</html>
